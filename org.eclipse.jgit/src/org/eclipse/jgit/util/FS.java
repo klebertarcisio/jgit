@@ -70,7 +70,6 @@ import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.errors.LockFailedException;
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.internal.storage.file.FileSnapshot;
-import org.eclipse.jgit.lib.Config;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
@@ -1742,7 +1741,7 @@ public abstract class FS {
 			return new ProcessResult(Status.NOT_PRESENT);
 		}
 
-		File runDirectory = getRunDirectory(repository, hookName);
+		File runDirectory = repository.getRunDirectory(hookName);
 		if (runDirectory == null) {
 			return new ProcessResult(Status.NOT_PRESENT);
 		}
@@ -1801,7 +1800,7 @@ public abstract class FS {
 		if (hookName == null) {
 			return null;
 		}
-		File hookDir = getHooksDirectory(repository);
+		File hookDir = repository.getHooksDirectory();
 		if (hookDir == null) {
 			return null;
 		}
@@ -1813,7 +1812,7 @@ public abstract class FS {
 			}
 		} else {
 			try {
-				File runDirectory = getRunDirectory(repository, hookName);
+				File runDirectory = repository.getRunDirectory(hookName);
 				if (runDirectory == null) {
 					return null;
 				}
@@ -1837,33 +1836,7 @@ public abstract class FS {
 		return hookFile;
 	}
 
-	private File getRunDirectory(Repository repository,
-			@NonNull String hookName) {
-		if (repository.isBare()) {
-			return repository.getDirectory();
-		}
-		switch (hookName) {
-		case "pre-receive": //$NON-NLS-1$
-		case "update": //$NON-NLS-1$
-		case "post-receive": //$NON-NLS-1$
-		case "post-update": //$NON-NLS-1$
-		case "push-to-checkout": //$NON-NLS-1$
-			return repository.getDirectory();
-		default:
-			return repository.getWorkTree();
-		}
-	}
 
-	private File getHooksDirectory(Repository repository) {
-		Config config = repository.getConfig();
-		String hooksDir = config.getString(ConfigConstants.CONFIG_CORE_SECTION,
-				null, ConfigConstants.CONFIG_KEY_HOOKS_PATH);
-		if (hooksDir != null) {
-			return new File(hooksDir);
-		}
-		File dir = repository.getDirectory();
-		return dir == null ? null : new File(dir, Constants.HOOKS);
-	}
 
 	/**
 	 * Runs the given process until termination, clearing its stdout and stderr

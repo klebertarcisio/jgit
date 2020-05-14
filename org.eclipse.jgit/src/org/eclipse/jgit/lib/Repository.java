@@ -2078,4 +2078,40 @@ public abstract class Repository implements AutoCloseable {
 	public void autoGC(ProgressMonitor monitor) {
 		// default does nothing
 	}
+
+	/**
+	 * @param hookName
+	 *            is the name of the hook
+	 * @return getDirectory or getWorkTree depends on the hookName
+	 */
+	public File getRunDirectory(@NonNull String hookName) {
+		if (isBare()) {
+			return getDirectory();
+		}
+		switch (hookName) {
+		case "pre-receive": //$NON-NLS-1$
+		case "update": //$NON-NLS-1$
+		case "post-receive": //$NON-NLS-1$
+		case "post-update": //$NON-NLS-1$
+		case "push-to-checkout": //$NON-NLS-1$
+			return getDirectory();
+		default:
+			return getWorkTree();
+		}
+	}
+
+	/**
+	 * @return File (inside gitDir) where the hooks are stored if hooksDir
+	 *         exists. getDirectory otherwise
+	 */
+	public File getHooksDirectory() {
+		String hooksDir = getConfig().getString(
+				ConfigConstants.CONFIG_CORE_SECTION, null,
+				ConfigConstants.CONFIG_KEY_HOOKS_PATH);
+		if (hooksDir != null) {
+			return new File(hooksDir);
+		}
+		File dir = getDirectory();
+		return dir == null ? null : new File(dir, Constants.HOOKS);
+	}
 }
