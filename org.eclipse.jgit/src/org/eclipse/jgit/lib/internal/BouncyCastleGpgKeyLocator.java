@@ -319,78 +319,51 @@ class BouncyCastleGpgKeyLocator {
 	 * @throws UnsupportedCredentialItem
 	 */
 	@NonNull
-	public BouncyCastleGpgKey findSecretKey() throws IOException,
-			NoSuchAlgorithmException, NoSuchProviderException, PGPException,
-			CanceledException, UnsupportedCredentialItem, URISyntaxException {
+	public BouncyCastleGpgKey findSecretKey() throws IOException,NoSuchAlgorithmException, NoSuchProviderException, PGPException,CanceledException, UnsupportedCredentialItem, URISyntaxException {
 		BouncyCastleGpgKey key;
 		PGPPublicKey publicKey = null;
 		if (hasKeyFiles(USER_SECRET_KEY_DIR)) {
-			// Use pubring.kbx or pubring.gpg to find the public key, then try
-			// the key files in the directory. If the public key was found in
-			// pubring.gpg also try secring.gpg to find the secret key.
 			if (exists(USER_KEYBOX_PATH)) {
 				try {
 					publicKey = findPublicKeyInKeyBox(USER_KEYBOX_PATH);
 					if (publicKey != null) {
-						key = findSecretKeyForKeyBoxPublicKey(publicKey,
-								USER_KEYBOX_PATH);
+						key = findSecretKeyForKeyBoxPublicKey(publicKey,USER_KEYBOX_PATH);
 						if (key != null) {
 							return key;
 						}
-						throw new PGPException(MessageFormat.format(
-								JGitText.get().gpgNoSecretKeyForPublicKey,
-								Long.toHexString(publicKey.getKeyID())));
+						throw new PGPException(MessageFormat.format(JGitText.get().gpgNoSecretKeyForPublicKey,Long.toHexString(publicKey.getKeyID())));
 					}
-					throw new PGPException(MessageFormat.format(
-							JGitText.get().gpgNoPublicKeyFound, signingKey));
+					throw new PGPException(MessageFormat.format(JGitText.get().gpgNoPublicKeyFound, signingKey));
 				} catch (NoOpenPgpKeyException e) {
-					// There are no OpenPGP keys in the keybox at all: try the
-					// pubring.gpg, if it exists.
-					if (log.isDebugEnabled()) {
-						log.debug("{} does not contain any OpenPGP keys", //$NON-NLS-1$
-								USER_KEYBOX_PATH);
+					if (log.isDebugEnabled()) {log.debug("{} does not contain any OpenPGP keys",USER_KEYBOX_PATH);
 					}
 				}
 			}
 			if (exists(USER_PGP_PUBRING_FILE)) {
 				publicKey = findPublicKeyInPubring(USER_PGP_PUBRING_FILE);
 				if (publicKey != null) {
-					// GPG < 2.1 may have both; the agent using the directory
-					// and gpg using secring.gpg. GPG >= 2.1 delegates all
-					// secret key handling to the agent and doesn't use
-					// secring.gpg at all, even if it exists. Which means for us
-					// we have to try both since we don't know which GPG version
-					// the user has.
-					key = findSecretKeyForKeyBoxPublicKey(publicKey,
-							USER_PGP_PUBRING_FILE);
+					key = findSecretKeyForKeyBoxPublicKey(publicKey,USER_PGP_PUBRING_FILE);
 					if (key != null) {
 						return key;
 					}
 				}
 			}
 			if (publicKey == null) {
-				throw new PGPException(MessageFormat.format(
-						JGitText.get().gpgNoPublicKeyFound, signingKey));
+				throw new PGPException(MessageFormat.format(JGitText.get().gpgNoPublicKeyFound, signingKey));
 			}
-			// We found a public key, but didn't find the secret key in the
-			// private key directory. Go try the secring.gpg.
 		}
 		boolean hasSecring = false;
 		if (exists(USER_PGP_LEGACY_SECRING_FILE)) {
 			hasSecring = true;
 			key = loadKeyFromSecring(USER_PGP_LEGACY_SECRING_FILE);
-			if (key != null) {
+			if (key != null)
 				return key;
-			}
 		}
 		if (publicKey != null) {
-			throw new PGPException(MessageFormat.format(
-					JGitText.get().gpgNoSecretKeyForPublicKey,
-					Long.toHexString(publicKey.getKeyID())));
+			throw new PGPException(MessageFormat.format(JGitText.get().gpgNoSecretKeyForPublicKey,Long.toHexString(publicKey.getKeyID())));
 		} else if (hasSecring) {
 			// publicKey == null: user has _only_ pubring.gpg/secring.gpg.
-			throw new PGPException(MessageFormat.format(
-					JGitText.get().gpgNoKeyInLegacySecring, signingKey));
+			throw new PGPException(MessageFormat.format(JGitText.get().gpgNoKeyInLegacySecring, signingKey));
 		} else {
 			throw new PGPException(JGitText.get().gpgNoKeyring);
 		}

@@ -53,11 +53,8 @@ public class DirCacheLargePathTest extends RepositoryTestCase {
 		final String longPath = makeLongPath(len);
 		final String shortPath = "~~~ shorter-path";
 
-		final DirCacheEntry longEnt = new DirCacheEntry(longPath);
-		final DirCacheEntry shortEnt = new DirCacheEntry(shortPath);
-
-		longEnt.setFileMode(FileMode.REGULAR_FILE);
-		shortEnt.setFileMode(FileMode.REGULAR_FILE);
+		final DirCacheEntry longEnt = new DirCacheEntry(longPath, FileMode.REGULAR_FILE);
+		final DirCacheEntry shortEnt = new DirCacheEntry(shortPath, FileMode.REGULAR_FILE);
 
 		assertEquals(longPath, longEnt.getPathString());
 		assertEquals(shortPath, shortEnt.getPathString());
